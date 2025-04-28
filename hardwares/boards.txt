@@ -1,0 +1,17 @@
+
+################################################################################
+# W2 Mips Chip
+
+W2.name=W2
+
+W2.build.board=MIPS_W2
+W2.build.mcu=MIPS
+W2.build.core=W2
+
+W2.upload.maximum_size=131072
+W2.upload.maximum_data_size=8192
+W2.upload.tool=w2uploader
+W2.upload.speed=9600
+W2.upload.protocol=arduino
+
+################################################################################
