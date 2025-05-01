@@ -8,7 +8,7 @@ This is a board package for the W2 develop board. This repository contains only 
 2. Go to `File` -> `Preferences`.
 3. In the `Additional Board Manager URLs` field, add the following URL:
    ```
-   https://github.com/PramSin/W2/releases/download/v1.2.0/w2_windows.json
+   https://github.com/PramSin/W2/releases/download/v1.2.1/w2_windows.json
    ```
 4. Click `OK` to save the preferences.
 5. Go to `Tools` -> `Board` -> `Boards Manager`.

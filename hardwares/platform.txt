@@ -2,7 +2,7 @@
 # In this file, the patterns and the ways to use cmd are defined
 
 name=W2 Develop Board
-version=1.2.0
+version=1.2.1
 
 # Path Arguments For Compile
 compiler.path={runtime.tools.mips-compiler.path}/bin/
