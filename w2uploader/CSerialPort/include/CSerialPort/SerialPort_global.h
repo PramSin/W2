@@ -99,7 +99,7 @@ enum OperateMode
 
 /**
  * @brief the BaudRate enum 波特率
- * @warning because baudrate is number, so it can be any value(includr follow definitions).
+ * @warning because BaudRate is number, so it can be any value(include follow definitions).
  * 因为波特率为数值类型，所以理论上可以为任意值(包括下列定义)
  */
 enum BaudRate

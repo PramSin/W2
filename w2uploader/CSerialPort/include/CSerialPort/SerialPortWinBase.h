@@ -1,55 +1,55 @@
 ﻿/**
- * @file SerialPort.h
+ * @file SerialPortWinBase.h
  * @author itas109 (itas109@qq.com) \n\n
  * Blog : https://blog.csdn.net/itas109 \n
  * Github : https://github.com/itas109 \n
  * Gitee : https://gitee.com/itas109 \n
  * QQ Group : 129518033
- * @brief a lightweight library of serial port, which can easy to read and write serical port on windows and linux with
- * C++ 轻量级跨平台串口读写类库
+ * @brief the CSerialPort Windows Base class windows串口基类
  * @copyright The CSerialPort is Copyright (C) 2014 itas109 <itas109@qq.com>. \n
  * You may use, copy, modify, and distribute the CSerialPort, under the terms \n
  * of the LICENSE file.
  */
-#ifndef __CSERIALPORT_H__
-#define __CSERIALPORT_H__
+#ifndef __CSERIALPORTWINBASE_H__
+#define __CSERIALPORTWINBASE_H__
 
-#include "SerialPort_global.h"
-#include "SerialPortListener.h"
+#include "ithread.hpp"
+#include "ibuffer.hpp"
+#include "SerialPortBase.h"
 
-namespace itas109
-{
-template <class T>
-class ITimer;
-}
-
-class CSerialPortBase;
-
-namespace itas109
-{
 /**
- * @brief the CSerialPort class 串口类库
- * @see reference 引用 CSerialPortBase
+ * @brief the CSerialPort Windows Base class windows串口基类
+ * @see inherit 继承 CSerialPortBase
+ * @todo
+ * 1. 多线程内部接管，无需开发者关心 \n
+ * 2. 使用自动锁处理多线程互斥访问问题 \n
+ * 3. 设计为虚函数，开发者可以继承修改 \n
+ * 4. 支持热插拔 \n
+ * 5. 支持通用通信协议:帧头 + 数据 + 校验 + 帧尾 \n
+ * 6. 支持基于时间片的数据组装 \n
+ * 7. 基于时间戳的数据缓存队列 - 数据存到缓冲区，并标记时间戳 开发者按照一定策略获取及组装数据 \n
+ * 8. 重写windows下ReadFile、WriteFile \n
+ * @warning More than one character can trigger read event 注意：只有超过一个字符才能出发接收事件
  */
-class DLL_EXPORT CSerialPort
+class CSerialPortWinBase : public CSerialPortBase
 {
 public:
     /**
-     * @brief Construct a new CSerialPort object 构造函数
+     * @brief Construct a new CSerialPortWinBase object 构造函数
      *
      */
-    CSerialPort();
+    CSerialPortWinBase();
     /**
-     * @brief Construct a new CSerialPort object 通过串口名称构造函数
+     * @brief Construct a new CSerialPortWinBase object 通过串口名称构造函数
      *
-     * @param portName [in] the port name 串口名称 Windows:COM1 Linux:/dev/ttyS0
+     * @param portName  [in] the port name 串口名称 Windows:COM1 Linux:/dev/ttyS0
      */
-    CSerialPort(const char *portName);
+    CSerialPortWinBase(const char *portName);
     /**
-     * @brief Destroy the CSerialPort object 析构函数
+     * @brief Destroy the CSerialPortWinBase object 析构函数
      *
      */
-    ~CSerialPort();
+    ~CSerialPortWinBase();
 
     /**
      * @brief init 初始化函数
@@ -58,7 +58,7 @@ public:
      * @param baudRate [in] the baudRate 波特率
      * @param parity [in] the parity 校验位
      * @param dataBits [in] the dataBits 数据位
-     * @param stopbits [in] the stopbits 停止位
+     * @param stopBits [in] the stopBits 停止位
      * @param flowControl [in] flowControl type 流控制
      * @param readBufferSize [in] the read buffer size 读取缓冲区大小
      */
@@ -66,16 +66,9 @@ public:
               int baudRate = itas109::BaudRate9600,
               itas109::Parity parity = itas109::ParityNone,
               itas109::DataBits dataBits = itas109::DataBits8,
-              itas109::StopBits stopbits = itas109::StopOne,
+              itas109::StopBits stopBits = itas109::StopOne,
               itas109::FlowControl flowControl = itas109::FlowNone,
               unsigned int readBufferSize = 4096);
-
-    /**
-     * @brief Set the Operate Mode object 设置串口操作模式
-     *
-     * @param operateMode [in] the operate mode 串口操作模式 {@link itas109::OperateMode}
-     */
-    void setOperateMode(itas109::OperateMode operateMode = itas109::AsynchronousOperate);
 
     /**
      * @brief open serial port 打开串口
@@ -84,12 +77,12 @@ public:
      * @retval true open success 打开成功
      * @retval false open failed 打开失败
      */
-    bool open();
+    bool openPort();
     /**
      * @brief close 关闭串口
      *
      */
-    void close();
+    void closePort();
 
     /**
      * @brief if serial port is open success 串口是否打开成功
@@ -99,44 +92,6 @@ public:
      * @retval false serial port open failed 串口打开失败
      */
     bool isOpen();
-
-    /**
-     * @brief connect read event 连接读取事件
-     *
-     * @param event [in] serial port listener 串口监听事件类
-     * @return return connect status 返回连接状态
-     * @retval 0 success 成功
-     * @retval 14 invalid parameter error 无效的参数
-     */
-    int connectReadEvent(itas109::CSerialPortListener *event);
-
-    /**
-     * @brief disconnect read event 断开连接读取事件
-     *
-     * @return return disconnect status 返回断开连接状态
-     * @retval 0 success 成功
-     * @retval [other] failed 失败
-     */
-    int disconnectReadEvent();
-
-    /**
-     * @brief connect hot plug event 连接串口热插拔事件
-     *
-     * @param event [in] serial port hot plug listener 串口热插拔事件类
-     * @return return connect status 返回连接状态
-     * @retval 0 success 成功
-     * @retval 14 invalid parameter error 无效的参数
-     */
-    int connectHotPlugEvent(itas109::CSerialPortHotPlugListener *event);
-
-    /**
-     * @brief disconnect hot plug event 断开串口热插拔事件
-     *
-     * @return return disconnect status 返回断开串口热插拔状态
-     * @retval 0 success 成功
-     * @retval [other] failed 失败
-     */
-    int disconnectHotPlugReadEvent();
 
     /**
      * @brief get used length of buffer 获取读取缓冲区已使用大小
@@ -174,10 +129,10 @@ public:
      */
     int readLineData(void *data, int size);
     /**
-     * @brief write specified lenfth data 写入指定长度数据
+     * @brief write specified length data 写入指定长度数据
      *
      * @param data [in] write data 待写入数据
-     * @param size [in] wtite length 写入长度
+     * @param size [in] write length 写入长度
      * @return return number Of bytes write 返回写入字节数
      * @retval -1 read error 写入错误
      * @retval [other] return number Of bytes write 返回写入字节数
@@ -202,23 +157,10 @@ public:
     void setReadIntervalTimeout(unsigned int msecs);
 
     /**
-     * @brief Get Read Interval Timeout millisecond
-     *
-     * @return read time timeout millisecond 读取间隔时间，单位：毫秒
-     */
-    unsigned int getReadIntervalTimeout();
-
-    /**
      * @brief setMinByteReadNotify set minimum byte of read notify 设置读取通知触发最小字节数
      * @param minByteReadNotify minimum byte of read notify 读取通知触发最小字节数
      */
     void setMinByteReadNotify(unsigned int minByteReadNotify = 2);
-
-    /**
-     * @brief setByteReadBufferFullNotify set byte of read buffer full notify 设置读取通知触发缓冲区字节数
-     * @param byteReadBufferFullNotify byte of read buffer full notify 读取通知触发缓冲区字节数
-     */
-    void setByteReadBufferFullNotify(unsigned int byteReadBufferFullNotify);
 
     /**
      * @brief flush buffers after write 等待发送完成后刷新缓冲区
@@ -248,24 +190,6 @@ public:
     bool flushWriteBuffers();
 
     /**
-     * @brief Get the Last Error object 获取最后的错误代码
-     *
-     * @return return last error code, refrence {@link itas109::SerialPortError} 错误代码
-     */
-    int getLastError() const;
-    /**
-     * @brief Get the Last Error Code Message 获取错误码信息
-     *
-     * @return return last error code message 返回错误码信息
-     */
-    const char *getLastErrorMsg() const;
-    /**
-     * @brief clear error 清除错误信息
-     *
-     */
-    void clearError();
-
-    /**
      * @brief Set the Port Name object 设置串口名称
      *
      * @param portName [in] the port name 串口名称 Windows:COM1 Linux:/dev/ttyS0
@@ -277,6 +201,7 @@ public:
      * @return return port name 返回串口名称
      */
     const char *getPortName() const;
+
     /**
      * @brief Set the Baud Rate object 设置波特率
      *
@@ -302,11 +227,10 @@ public:
      * @return return parity 返回校验位 {@link itas109::Parity}
      */
     itas109::Parity getParity() const;
-
     /**
      * @brief Set the Data Bits object 设置数据位
      *
-     * @param dataBits [in] the dataBits 数据位  {@link itas109::DataBits}
+     * @param dataBits [in] the dataBits 数据位 {@link itas109::DataBits}
      */
     void setDataBits(itas109::DataBits dataBits);
     /**
@@ -319,13 +243,13 @@ public:
     /**
      * @brief Set the Stop Bits object 设置停止位
      *
-     * @param stopbits [in] the stopbits 停止位 {@link itas109::StopBits}
+     * @param stopBits [in] the stopBits 停止位 {@link itas109::StopBits}
      */
-    void setStopBits(itas109::StopBits stopbits);
+    void setStopBits(itas109::StopBits stopBits);
     /**
      * @brief Get the Stop Bits object 获取停止位
      *
-     * @return return stopbits 返回停止位 {@link itas109::StopBits}
+     * @return return stopBits 返回停止位 {@link itas109::StopBits}
      */
     itas109::StopBits getStopBits() const;
 
@@ -345,9 +269,9 @@ public:
     itas109::FlowControl getFlowControl() const;
 
     /**
-     * @brief Set the Read Buffer Size object
+     * @brief Set the Read Buffer Size object 设置读取缓冲区大小
      *
-     * @param size [in] read buffer size  设置缓冲区大小
+     * @param size [in] read buffer size 读取缓冲区大小
      */
     void setReadBufferSize(unsigned int size);
     /**
@@ -370,15 +294,87 @@ public:
      */
     void setRts(bool set = true);
 
+public:
     /**
-     * @brief Get the Version object 获取版本信息
+     * @brief Get the Overlap Monitor object 获取监视器的overlapped
      *
-     * @return return version 返回版本信息
+     * @return return monitor overlapped 返回监视器的overlapped
      */
-    const char *getVersion();
+    OVERLAPPED getOverlapMonitor();
+    /**
+     * @brief Get the Main Handle object 获取handle
+     *
+     * @return return handle 返回handle
+     */
+    HANDLE getMainHandle();
+
+    /**
+     * @brief isThreadRunning 是否启动多线程
+     * @return
+     * @retval true thread running 多线程已启动
+     * @retval false thread not running 多线程未启动
+     */
+    bool isThreadRunning();
 
 private:
-    CSerialPortBase *p_serialPortBase;
+    /**
+     * @brief thread monitor 多线程监视器
+     *
+     */
+    static unsigned int __stdcall commThreadMonitor(LPVOID pParam);
+    /**
+     * @brief start thread monitor 启动多线程监视器
+     *
+     * @return
+     * @retval true start success 启动成功
+     * @retval false start failed 启动失败
+     */
+    bool startThreadMonitor();
+    /**
+     * @brief stop thread monitor 停止多线程监视器
+     *
+     * @return
+     * @retval true stop success 停止成功
+     * @retval false stop failed 停止失败
+     */
+    bool stopThreadMonitor();
+
+    /**
+     * @brief read specified length data 读取指定长度数据
+     *
+     * @param data [out] read data result 读取结果
+     * @param size [in] read length 读取长度
+     * @return return number Of bytes read 返回读取字节数
+     * @retval -1 read error 读取错误
+     * @retval [other] return number Of bytes read 返回读取字节数
+     */
+    int readDataWin(void *data, int size);
+
+private:
+    char m_portName[256];
+    int m_baudRate;
+    itas109::Parity m_parity;
+    itas109::DataBits m_dataBits;
+    itas109::StopBits m_stopBits;
+    enum itas109::FlowControl m_flowControl;
+    unsigned int m_readBufferSize;
+
+private:
+    HANDLE m_handle;
+
+    itas109::i_thread_t m_monitorThread;
+    OVERLAPPED overlapMonitor; ///< monitor overlapped
+
+    OVERLAPPED m_overlapRead;  ///< read overlapped
+    OVERLAPPED m_overlapWrite; ///< write overlapped
+
+    COMMCONFIG m_comConfigure;
+    COMMTIMEOUTS m_comTimeout;
+
+    CRITICAL_SECTION m_communicationMutex; ///< mutex
+
+    bool m_isThreadRunning;
+
+    itas109::RingBuffer<char> *p_buffer; ///< receive buffer
 };
-} // namespace itas109
-#endif //__CSERIALPORT_H__
+#endif //__CSERIALPORTWINBASE_H__

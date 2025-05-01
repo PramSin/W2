@@ -5,7 +5,7 @@
  * Github : https://github.com/itas109 \n
  * Gitee : https://gitee.com/itas109 \n
  * QQ Group : 129518033
- * @brief a lightweight library of serial port, which can easy to read and write serical port on windows and linux with
+ * @brief a lightweight library of serial port, which can easy to read and write serial port on windows and linux with
  * C++ 轻量级跨平台串口读写类库
  * @copyright The CSerialPort is Copyright (C) 2014 itas109 <itas109@qq.com>. \n
  * You may use, copy, modify, and distribute the CSerialPort, under the terms \n
@@ -58,7 +58,7 @@ public:
      * @param baudRate [in] the baudRate 波特率
      * @param parity [in] the parity 校验位
      * @param dataBits [in] the dataBits 数据位
-     * @param stopbits [in] the stopbits 停止位
+     * @param stopBits [in] the stopBits 停止位
      * @param flowControl [in] flowControl type 流控制
      * @param readBufferSize [in] the read buffer size 读取缓冲区大小
      */
@@ -66,7 +66,7 @@ public:
               int baudRate = itas109::BaudRate9600,
               itas109::Parity parity = itas109::ParityNone,
               itas109::DataBits dataBits = itas109::DataBits8,
-              itas109::StopBits stopbits = itas109::StopOne,
+              itas109::StopBits stopBits = itas109::StopOne,
               itas109::FlowControl flowControl = itas109::FlowNone,
               unsigned int readBufferSize = 4096);
 
@@ -174,10 +174,10 @@ public:
      */
     int readLineData(void *data, int size);
     /**
-     * @brief write specified lenfth data 写入指定长度数据
+     * @brief write specified length data 写入指定长度数据
      *
      * @param data [in] write data 待写入数据
-     * @param size [in] wtite length 写入长度
+     * @param size [in] write length 写入长度
      * @return return number Of bytes write 返回写入字节数
      * @retval -1 read error 写入错误
      * @retval [other] return number Of bytes write 返回写入字节数
@@ -250,7 +250,7 @@ public:
     /**
      * @brief Get the Last Error object 获取最后的错误代码
      *
-     * @return return last error code, refrence {@link itas109::SerialPortError} 错误代码
+     * @return return last error code, reference {@link itas109::SerialPortError} 错误代码
      */
     int getLastError() const;
     /**
@@ -319,13 +319,13 @@ public:
     /**
      * @brief Set the Stop Bits object 设置停止位
      *
-     * @param stopbits [in] the stopbits 停止位 {@link itas109::StopBits}
+     * @param stopBits [in] the stopBits 停止位 {@link itas109::StopBits}
      */
-    void setStopBits(itas109::StopBits stopbits);
+    void setStopBits(itas109::StopBits stopBits);
     /**
      * @brief Get the Stop Bits object 获取停止位
      *
-     * @return return stopbits 返回停止位 {@link itas109::StopBits}
+     * @return return stopBits 返回停止位 {@link itas109::StopBits}
      */
     itas109::StopBits getStopBits() const;
 

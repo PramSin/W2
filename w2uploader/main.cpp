@@ -166,11 +166,12 @@ int main(const int argc, char* argv[])
     bool is_run = false;
     bool is_reset = true;
     const string help_message = "Usage:\n"
-        "W2Uploader <bin_path> <port_name> [OPTIONS]\n"
+        "w2uploader <bin_path> <port_name> [OPTIONS]\n"
+        "OPTIONS:\n"
         "  -h, --help       Show this help message\n"
         "  -v, --visible    Show detailed information\n"
         "  -r, --run        Run the program immediately after the upload\n"
-        "    , --no-reset   Reset the program\n";
+        "      --no-reset   Upload the program immediately without waiting for the reset of the board\n";
 
 #ifdef __DEBUG
     cout << "Debug mode enabled" << endl;

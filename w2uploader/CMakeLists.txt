@@ -1,8 +1,10 @@
 cmake_minimum_required(VERSION 3.31)
-project(W2Uploader)
+
+project(w2uploader)
 
 set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "utils/x64" "utils/x86")
+set(BUILD_SHARED_LIBS OFF)
+set(CSerialPortRootPath "${CMAKE_CURRENT_SOURCE_DIR}/CSerialPort")
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     message(STATUS "Debug build")
@@ -10,12 +12,11 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_definitions(-DCSERIALPORT_DEBUG)
 endif ()
 
-find_package(CSerialPort REQUIRED)
+add_subdirectory(${CSerialPortRootPath})
 
-set(EXECUTABLE_NAME "w2uploader")
-add_executable(${EXECUTABLE_NAME} main.cpp)
-include_directories(${CSerialPort_INCLUDE_DIR})
-target_link_libraries(${EXECUTABLE_NAME} ${CSerialPort_LIBRARY}
-        -static-libgcc -static-libstdc++
-        -Wl,-Bstatic -lstdc++ -lpthread
-        -Wl,-Bdynamic)
+add_executable(${PROJECT_NAME} main.cpp)
+include_directories(${CSerialPortRootPath}/include)
+target_link_libraries(${PROJECT_NAME} libcserialport)
+
+install(TARGETS ${PROJECT_NAME}
+        RUNTIME DESTINATION bin)
