@@ -2,6 +2,7 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
+#include <thread>
 
 #include "CSerialPort/SerialPort.h"
 using namespace std;
@@ -29,28 +30,38 @@ auto NO_TIMEOUT = -1;
 bool DelayForResponse(CSerialPort* serial_port, const string& message, const int timeout, const bool is_visible)
 {
     const auto start_time = chrono::high_resolution_clock::now();
+    string data;
+    char buffer[8196];
     while (true)
     {
-        const auto data = new char[8196];
-        serial_port->readAllData(data);
+        const auto length = serial_port->readAllData(buffer);
+        if (length > 0)
+        {
+            data.append(buffer, length);
+        }
 
-        if (string(data).find(message) != string::npos)
+        if (data.find(message) != string::npos)
         {
             if (is_visible)
             {
                 cout << data << endl;
             }
-            delete[] data;
+#ifdef __DEBUG
+            cout << SUCCESS << "Data " << message << " found in " << data << RESET << endl;
+#endif
             return true;
         }
 
-        delete[] data;
-
-        auto duration = chrono::duration_cast<chrono::seconds>(chrono::high_resolution_clock::now() - start_time);
-        if (timeout != NO_TIMEOUT && duration.count() > timeout)
+        auto duration = chrono::duration_cast<chrono::milliseconds>(chrono::high_resolution_clock::now() - start_time);
+        if (timeout != NO_TIMEOUT && duration.count() > timeout * 1000)
         {
+#ifdef __DEBUG
+            cout << WARNING << "Data " << message << " not found in " << data << RESET << endl;
+#endif
             return false;
         }
+
+        this_thread::sleep_for(chrono::milliseconds(10));
     }
 }
 
@@ -125,13 +136,13 @@ int GetSerialPort(CSerialPort* serial_port, const char* port_name, const bool is
             cout << "Port opened, waiting for resetting the board..." << endl;
             DelayForResponse(serial_port, " > ", NO_TIMEOUT, false);
             cout << SUCCESS << "Board is ready" << RESET << endl;
+            serial_port->writeData("\n", 1);
         }
 
         if (serial_port->isOpen())
         {
             if (DelayForResponse(serial_port, " > ", TIMEOUT, false))
             {
-                serial_port->close();
                 cout << SUCCESS << "Serial port " << serial_port->getPortName() << " connected successfully"
                     << RESET << endl;
                 return 0;
@@ -229,14 +240,17 @@ int main(const int argc, char* argv[])
         cerr << "Failed to connect the serial port " << port_name << endl;
         return 1;
     }
-    serial_port->open();
-    serial_port->readAllData(nullptr);
 
+    cout << "Waiting for the response from the board..." << endl;
     serial_port->writeData("\n", 1);
-    cout << "Wait for the response from the board" << endl;
-    if (DelayForResponse(serial_port, " > ", 5 * TIMEOUT, is_visible))
+    if (DelayForResponse(serial_port, " > ", TIMEOUT, is_visible))
     {
-        cout << SUCCESS << "Success" << RESET << endl;
+        cout << SUCCESS << "Response received" << RESET << endl;
+    }
+    else
+    {
+        cerr << "Failed to receive the response" << endl;
+        return 1;
     }
 
     cout << "Unlock the Flash" << endl;
@@ -257,18 +271,26 @@ int main(const int argc, char* argv[])
     serial_port->writeData("5", 1);
     DelayForResponse(serial_port, "Address in hex> ", TIMEOUT, is_visible);
     serial_port->writeData("10000000\n", 9);
-    DelayForResponse(serial_port, "Waiting for binary image linked at 10000000", TIMEOUT, is_visible);
+    if (!DelayForResponse(serial_port, "Waiting for binary image linked at 10000000", TIMEOUT, is_visible))
+    {
+        cerr << "Failed to finish the preprocess" << endl;
+        return 1;
+    }
     cout << "Uploading..." << endl;
     serial_port->writeData(buffer, static_cast<int>(f_size));
 
-    DelayForResponse(serial_port, " > ", TIMEOUT, is_visible);
+    if (!DelayForResponse(serial_port, " > ", 5 * TIMEOUT, is_visible))
+    {
+        cerr << "Failed to upload the image" << endl;
+        return 1;
+    }
 
     cout << f_size << " bytes code loaded to 0x10000000" << endl;
     MemoryWriteWord(serial_port, "1f800004", "0");
 
     if (is_run)
     {
-        cout << "Jumping to the code" << endl;
+        cout << "Jumping to the code..." << endl;
         serial_port->writeData("3", 1);
         DelayForResponse(serial_port, "Address in hex> ", 1, is_visible);
         serial_port->writeData("10000000\n", 9);

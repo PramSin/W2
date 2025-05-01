@@ -1,1 +1,7 @@
+# IDE files
+.idea/
+.vscode/
+
+# CMake files
 release/
+cmake-build*/
